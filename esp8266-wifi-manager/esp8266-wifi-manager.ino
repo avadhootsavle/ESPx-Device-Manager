@@ -350,6 +350,7 @@ void setup() {
   Serial.println("\nStarting ESP8266...");
 
   WiFi.mode(WIFI_AP);
+  WiFi.setOutputPower(20.5);
   WiFi.softAPConfig(local_IP, gateway, subnet);
   WiFi.softAP(ssid, pass, channel, 0, maxClients);
 
