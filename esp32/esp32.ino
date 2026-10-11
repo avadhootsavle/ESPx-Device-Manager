@@ -319,7 +319,7 @@ void handleKick() {
 
   uint8_t mac[6];
   if (server.hasArg("mac") && stringToMac(server.arg("mac"), mac)) {
-    blockDevice(mac, 600000);   
+    blockDevice(mac, 60000);
     Serial.printf("[kick] %s\n", macToString(mac).c_str());
   }
   goHome();
@@ -355,7 +355,6 @@ void handleRename() {
   goHome();
 }
 
-// runs when a device joins the AP
 void onStaConnected(arduino_event_t *event) {
   const uint8_t *mac = event->event_info.wifi_ap_staconnected.mac;
   uint16_t aid = event->event_info.wifi_ap_staconnected.aid;
@@ -366,17 +365,17 @@ void onStaConnected(arduino_event_t *event) {
 }
 
 void setup() {
-  setCpuFrequencyMhz(240);   // max speed, keeps latency low
+  setCpuFrequencyMhz(240);
 
   Serial.begin(115200);
   delay(100);
   Serial.println("\nStarting ESP32...");
 
   WiFi.mode(WIFI_AP);
-  WiFi.setTxPower(WIFI_POWER_19_5dBm);
-  WiFi.softAP(ssid, pass, channel, 0, maxClients);
-  delay(100); 
   WiFi.softAPConfig(local_IP, gateway, subnet);
+  WiFi.softAP(ssid, pass, channel, 0, maxClients);
+  WiFi.setSleep(false);
+  WiFi.setTxPower(WIFI_POWER_19_5dBm);
 
   WiFi.onEvent(onStaConnected, ARDUINO_EVENT_WIFI_AP_STACONNECTED);
 

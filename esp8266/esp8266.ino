@@ -37,7 +37,6 @@ int blockedCount = 0;
 
 WiFiEventHandler onConnect;
 
-// ---------- helpers ----------
 String macToString(const uint8_t *mac) {
   char buf[18];
   snprintf(buf, sizeof(buf), "%02X:%02X:%02X:%02X:%02X:%02X",
@@ -45,7 +44,6 @@ String macToString(const uint8_t *mac) {
   return String(buf);
 }
 
-// takes "AA:BB:CC:DD:EE:FF" (or with %3A, dashes, spaces) and fills mac[]
 bool stringToMac(String s, uint8_t *mac) {
   s.replace("%3A", "");
   s.replace("%3a", "");
@@ -63,7 +61,6 @@ bool stringToMac(String s, uint8_t *mac) {
 }
 
 String guessVendor(const uint8_t *mac) {
-  // phones use random mac now so this bit is set a lot
   if (mac[0] & 0x02) return "Smartphone (Private MAC)";
 
   if (mac[0] == 0x3C && mac[1] == 0xD9 && mac[2] == 0x2B) return "Apple iPhone/iPad";
@@ -89,7 +86,6 @@ String getName(const uint8_t *mac, int num) {
 }
 
 void setAlias(const uint8_t *mac, const String &name) {
-  // already has one? just update it
   for (int i = 0; i < aliasCount; i++) {
     if (memcmp(aliases[i].mac, mac, 6) == 0) {
       strncpy(aliases[i].name, name.c_str(), sizeof(aliases[i].name) - 1);
@@ -122,7 +118,6 @@ bool isBlocked(const uint8_t *mac) {
   int idx = findBlocked(mac);
   if (idx == -1) return false;
 
-  // temp block over? remove it
   if (blocked[idx].until > 0 && millis() > blocked[idx].until) {
     removeBlocked(idx);
     return false;
@@ -306,7 +301,7 @@ void handleKick() {
 
   uint8_t mac[6];
   if (server.hasArg("mac") && stringToMac(server.arg("mac"), mac)) {
-    blockDevice(mac, 600000);   // 10 min so the phone doesnt just auto reconnect
+    blockDevice(mac, 60000);
     Serial.printf("[kick] %s\n", macToString(mac).c_str());
   }
   goHome();
@@ -343,16 +338,17 @@ void handleRename() {
 }
 
 void setup() {
-  system_update_cpu_freq(160);   // 160MHz, keeps latency low
+  system_update_cpu_freq(160);
 
   Serial.begin(115200);
   delay(100);
   Serial.println("\nStarting ESP8266...");
 
   WiFi.mode(WIFI_AP);
-  WiFi.setOutputPower(20.5);
   WiFi.softAPConfig(local_IP, gateway, subnet);
   WiFi.softAP(ssid, pass, channel, 0, maxClients);
+  WiFi.setSleepMode(WIFI_NONE_SLEEP);
+  WiFi.setOutputPower(20.5);
 
   onConnect = WiFi.onSoftAPModeStationConnected([](const WiFiEventSoftAPModeStationConnected &evt) {
     uint8_t mac[6];
